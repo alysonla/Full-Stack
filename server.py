@@ -8,23 +8,31 @@ server_sock.listen(10)
 while True:
     client_sock, addr = server_sock.accept()
     print 'We have opened a socket!'
-    output = client_sock.recv(100)  # these are the incoming headers
-    output = output.split()
-    print(output)
+    request_headers = client_sock.recv(100)  # these are the incoming request_headers
+    request_headers = request_headers.split()
+    print(request_headers)
 
-    if output[1] == ('/kittens'):
+    if len(request_headers) < 2:
+        continue
+        
+    # default status
+    response_status = '200 OK'
+
+    if request_headers[1] == '/kittens':
         with open('kittens.html') as f:
-            output = f.read()
-    else: output[4] == ('localhost:5050'):
+            response_body = f.read()
+    elif request_headers[1] == '/':
         with open('file.html') as f:
-            output = f.read()
+            response_body = f.read()
+    else:
+        response_status = '404 Not Found'
+        with open('file.html') as f:
+            response_body = f.read()
 
 
-    client_sock.send("HTTP/1.1 404 Not Found\n")
-    client_sock.send("Content length: "+str(len(output)))
+    client_sock.send("HTTP/1.1 " + response_status + "\n")
+    client_sock.send("Content length: "+str(len(response_body)))
     client_sock.send("Content-Type: text/html\n\n")
 
-    client_sock.send(output)
+    client_sock.send(response_body)
     client_sock.close()
-
-
